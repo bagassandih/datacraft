@@ -1,6 +1,4 @@
-# 📚 DataCraft - Enhanced Documentation
-
----
+# 📚 DataCraft
 
 ## 💭 Background Story
 
@@ -12,6 +10,42 @@ The goal behind DataCraft is to make query building **visual, intuitive, and err
 A tool that helps developers focus on **what they want to extract**, not **how to write it**.
 
 > In short: **less typing, more thinking.**
+
+---
+
+## 📷 Screenshot
+
+### Full Panel
+<img width="1679" alt="Full Panel" src="https://github.com/user-attachments/assets/78623d92-abf4-4729-8afe-8809e7e2f60d" />
+
+### Canvas Panel
+<img width="932" alt="Canvas Panel" src="https://github.com/user-attachments/assets/4391a763-7c85-427c-9c0e-d365fe6089d8" />
+
+### Detail Panels
+<table align="center">
+  <tr>
+     <td align="center">
+        Database Schema/List Table Panel
+     </td>
+     <td align="center">
+        Query Builder/Filter Panel
+    </td>
+     <td align="center">
+        Query Generator & Preview Panel
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img width="300" src="https://github.com/user-attachments/assets/c03a74de-bab8-4441-9de5-671f7aececfe" /><br/>
+    </td>
+    <td align="center">
+      <img width="300" src="https://github.com/user-attachments/assets/76626c06-2c89-4a3c-8937-dd01ab4192af" /><br/>
+    </td>
+    <td align="center">
+      <img width="300" src="https://github.com/user-attachments/assets/32ce6e8c-ce25-4693-b260-01c32597e651" /><br/>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -164,7 +198,6 @@ Adjust JOIN type, add filters, and preview SQL
 ### 5. Execute or Export
 Run query  
 View results in table  
-Export to CSV or JSON
 
 ---
 

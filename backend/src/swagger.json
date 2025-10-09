@@ -1,0 +1,115 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "DataCraft API",
+    "version": "1.0.0",
+    "description": "API for visual SQL query builder"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/api/connect": {
+      "post": {
+        "summary": "Test database connection",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client": { "type": "string", "enum": ["pg", "mysql2"] },
+                  "host": { "type": "string" },
+                  "port": { "type": "number" },
+                  "user": { "type": "string" },
+                  "password": { "type": "string" },
+                  "database": { "type": "string" }
+                },
+                "required": ["host", "user", "password", "database"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connection successful"
+          },
+          "400": {
+            "description": "Connection failed"
+          }
+        }
+      }
+    },
+    "/api/schema": {
+      "get": {
+        "summary": "Get database schema",
+        "responses": {
+          "200": {
+            "description": "Schema retrieved successfully"
+          }
+        }
+      }
+    },
+    "/api/generate": {
+      "post": {
+        "summary": "Generate SQL query from visual structure",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "edges": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SQL generated successfully"
+          }
+        }
+      }
+    },
+    "/api/execute": {
+      "post": {
+        "summary": "Execute SQL query",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Query executed successfully"
+          }
+        }
+      }
+    }
+  }
+}

@@ -37,7 +37,7 @@
             <n-input
               v-model:value="formData.password"
               type="password"
-              placeholder="••••••••"
+              placeholder="Leave empty if no password"
               show-password-on="click"
             />
           </n-form-item>
@@ -130,8 +130,8 @@ const rules = {
   client: { required: true, message: 'Please select database type' },
   host: { required: true, message: 'Please enter host' },
   port: { required: true, type: 'number', message: 'Please enter port' },
-  user: { required: true, message: 'Please enter username' },
-  password: { required: true, message: 'Please enter password' }
+  user: { required: true, message: 'Please enter username' }
+  // password is optional (for local dev without password)
 }
 
 const databaseOptions = computed(() =>

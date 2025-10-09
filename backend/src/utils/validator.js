@@ -8,7 +8,7 @@ export function validateConnectionConfig(config) {
 
   if (!config.host) errors.push('Host is required');
   if (!config.user) errors.push('User is required');
-  if (!config.password) errors.push('Password is required');
+  // Password is optional (e.g., for local development without password)
   if (!config.database) errors.push('Database name is required');
 
   if (config.client && !['pg', 'mysql2'].includes(config.client)) {

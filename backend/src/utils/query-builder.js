@@ -15,8 +15,10 @@ export function buildQuery(nodes, edges, clauses = {}) {
     throw new Error('No tables selected');
   }
 
-  // Build SELECT clause
+  // Build SELECT clause with column aliases to avoid ambiguity
   const selectParts = [];
+  const columnCount = {}; // Track column name occurrences
+
   nodes.forEach(node => {
     const alias = node.alias || node.id;
     const columns = node.columns || [];
@@ -24,15 +26,29 @@ export function buildQuery(nodes, edges, clauses = {}) {
     // Only add columns if user has selected any
     if (columns.length > 0) {
       columns.forEach(col => {
-        selectParts.push(`${alias}.${col}`);
+        // Track how many times this column name appears
+        columnCount[col] = (columnCount[col] || 0) + 1;
+
+        // Add table alias prefix to column name for clarity
+        // Format: tablealias_columnname (e.g., u_name, o_name)
+        const columnAlias = `${alias}_${col}`;
+        selectParts.push(`${alias}.${col} AS ${columnAlias}`);
       });
     }
   });
 
-  // If no columns selected at all, fallback to SELECT all from first table
-  const selectClause = selectParts.length > 0
-    ? `SELECT ${selectParts.join(', ')}`
-    : `SELECT *`;
+  // If no columns selected at all, select all columns from each table with alias prefix
+  let selectClause;
+  if (selectParts.length > 0) {
+    selectClause = `SELECT ${selectParts.join(', ')}`;
+  } else {
+    // Fallback: SELECT alias.* for each table to avoid ambiguity
+    const allTableSelects = nodes.map(node => {
+      const alias = node.alias || node.id;
+      return `${alias}.*`;
+    });
+    selectClause = `SELECT ${allTableSelects.join(', ')}`;
+  }
 
   // Build FROM clause (first table)
   const firstNode = nodes[0];

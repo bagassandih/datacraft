@@ -121,27 +121,55 @@ DataCraft isn’t trying to replace SQL — it’s here to make it **easier to t
 
 ---
 
-## 🚀 6. Deployment Notes
+## 🚀 6. Getting Started
 
-### Frontend (Vite)
+### Quick Start (Recommended)
+Run both frontend and backend with a single command:
 ```bash
-cd frontend
-npm install
-npm run build
+# Install all dependencies (root, backend, frontend)
+npm run install:all
+
+# Run both servers simultaneously
+npm run dev
 ```
 
-### Backend (Express)
+### Manual Installation (Alternative)
+If you prefer to install manually:
 ```bash
-cd backend
+# Install root dependencies
 npm install
-npm run build
-npm run start
+
+# Install backend dependencies
+cd backend && npm install
+
+# Install frontend dependencies
+cd ../frontend && npm install
+```
+
+### Run Separately (Optional)
+```bash
+# Run backend only
+npm run dev:be
+
+# Run frontend only
+npm run dev:fe
 ```
 
 ### Environment Variables Backend
 ```bash
 PORT=4000
 NODE_ENV=development
+```
+
+### Production Build
+```bash
+# Build frontend
+cd frontend
+npm run build
+
+# Start backend
+cd ../backend
+npm run start
 ```
 
 ---
@@ -169,30 +197,30 @@ datacraft/
 
 ## 📘 8. User Guide
 
-### 1. Start Backend
+### 1. Start Development Servers
 ```bash
-cd backend
+# From root directory - runs both backend & frontend
 npm run dev
 ```
 
-### 2. Start Frontend
-```bash
-cd frontend
-npm run dev
-```
+**What happens:**
+- Backend starts on `http://localhost:4000`
+- Frontend starts on `http://localhost:5173`
+- Both logs appear in the same terminal with color-coded output
 
-### 3. Connect to Database
-Fill in host, port, user, password  
+### 2. Connect to Database
+Fill in host, port, user, password
 Test → Connect → Visualize schema
 
-### 4. Build Queries Visually
-Drag tables to canvas  
-Link relationships  
+### 3. Build Queries Visually
+Drag tables to canvas
+Link relationships
 Adjust JOIN type, add filters, and preview SQL
 
-### 5. Execute
-Run query  
-View results in table  
+### 4. Execute & View Results
+Run query
+View results in table format
+Copy generated SQL for use in your application  
 
 ---
 

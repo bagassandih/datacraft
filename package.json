@@ -1,0 +1,19 @@
+{
+  "name": "datacraft",
+  "version": "1.0.0",
+  "description": "DataCraft - Visual SQL Query Builder (Full Stack)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:be": "npm run dev --prefix backend",
+    "dev:fe": "npm run dev --prefix frontend",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend"
+  },
+  "keywords": ["sql", "query-builder", "database", "fullstack"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -190,7 +190,7 @@ Drag tables to canvas
 Link relationships  
 Adjust JOIN type, add filters, and preview SQL
 
-### 5. Execute or Export
+### 5. Execute
 Run query  
 View results in table  
 

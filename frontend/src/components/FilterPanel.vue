@@ -23,7 +23,31 @@
       </div>
 
       <div v-else>
-        <n-collapse :default-expanded-names="['where']">
+        <n-collapse :default-expanded-names="['aliases', 'where']">
+          <!-- Table Aliases Section -->
+          <n-collapse-item title="Table Aliases" name="aliases">
+            <template #header-extra>
+              <span v-if="craftStore.nodes.length > 0" class="badge">{{ craftStore.nodes.length }}</span>
+            </template>
+
+            <n-space vertical :size="8">
+              <div
+                v-for="node in craftStore.nodes"
+                :key="node.id"
+                class="alias-item-row"
+              >
+                <label class="alias-label-compact">{{ node.data.table }}</label>
+                <n-input
+                  :value="node.data.alias"
+                  @update:value="(value) => updateAlias(node.id, value)"
+                  size="small"
+                  placeholder="Alias"
+                  class="alias-input-compact"
+                />
+              </div>
+            </n-space>
+          </n-collapse-item>
+
           <!-- WHERE Clause Section -->
           <n-collapse-item title="WHERE Conditions" name="where">
             <template #header-extra>
@@ -616,6 +640,11 @@ if (craftStore.queryClauses) {
   groupBy.value = craftStore.queryClauses.groupBy || []
   havingConditions.value = craftStore.queryClauses.having || []
 }
+
+// Update alias
+const updateAlias = (nodeId, newAlias) => {
+  craftStore.updateNodeAlias(nodeId, newAlias)
+}
 </script>
 
 <style scoped>
@@ -738,19 +767,60 @@ if (craftStore.queryClauses) {
   word-wrap: break-word;
 }
 
+/* Collapse Item Headers - More Clickable & Aligned */
 :deep(.n-collapse-item__header) {
-  background: rgba(99, 226, 183, 0.05);
-  padding: 12px 15px;
+  background: rgba(99, 226, 183, 0.08) !important;
+  padding: 14px 16px !important;
   font-weight: 600;
-  color: #fff;
+  color: #fff !important;
+  cursor: pointer !important;
+  border-radius: 6px !important;
+  margin-bottom: 8px !important;
+  border: 1px solid rgba(99, 226, 183, 0.15) !important;
+  transition: all 0.2s ease !important;
+  user-select: none;
+}
+
+:deep(.n-collapse-item__header:hover) {
+  background: rgba(99, 226, 183, 0.15) !important;
+  border-color: rgba(99, 226, 183, 0.3) !important;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(99, 226, 183, 0.1);
+}
+
+:deep(.n-collapse-item__header:active) {
+  transform: translateX(1px);
 }
 
 :deep(.n-collapse-item__header-main) {
-  color: #fff;
+  color: #fff !important;
+  font-size: 0.9rem;
 }
 
 :deep(.n-collapse-item__content-inner) {
-  padding: 15px;
+  padding: 15px !important;
+  padding-top: 12px !important;
+}
+
+/* Arrow icon styling */
+:deep(.n-collapse-item__header .n-collapse-item-arrow) {
+  color: #63e2b7 !important;
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+:deep(.n-collapse-item__header:hover .n-collapse-item-arrow) {
+  color: #4dd09a !important;
+}
+
+/* Collapse spacing */
+:deep(.n-collapse) {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+:deep(.n-collapse-item) {
+  margin-bottom: 0 !important;
 }
 
 /* Fix dropdown text overflow */
@@ -799,5 +869,27 @@ if (craftStore.queryClauses) {
   font-size: 0.75rem;
   line-height: 1.4;
   flex: 1;
+}
+
+/* Alias Item Row - Compact Design */
+.alias-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.alias-label-compact {
+  color: #8896a8;
+  font-size: 0.8rem;
+  min-width: 110px;
+  font-family: monospace;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.alias-input-compact {
+  flex: 1;
+  min-width: 0;
 }
 </style>

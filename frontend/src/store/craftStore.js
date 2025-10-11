@@ -186,10 +186,21 @@ export const useCraftStore = defineStore('craft', () => {
   function updateAliases() {
     const aliasMap = generateUniqueAliases(nodes.value)
     nodes.value.forEach(node => {
-      if (node.data?.table) {
-        node.data.alias = aliasMap.get(node.data.table)
+      if (node.id) {
+        node.data.alias = aliasMap.get(node.id)
       }
     })
+  }
+
+  // Update a specific node's alias
+  function updateNodeAlias(nodeId, newAlias) {
+    const nodeIndex = nodes.value.findIndex(n => n.id === nodeId)
+    if (nodeIndex !== -1) {
+      // Set the custom alias
+      nodes.value[nodeIndex].data.alias = newAlias
+      // Regenerate all aliases to ensure uniqueness
+      updateAliases()
+    }
   }
 
   return {
@@ -232,6 +243,7 @@ export const useCraftStore = defineStore('craft', () => {
     resetCanvas,
     saveSession,
     loadSession,
-    clearSession
+    clearSession,
+    updateNodeAlias
   }
 })

@@ -138,15 +138,10 @@ npm run build
 npm run start
 ```
 
-### Environment Variables
+### Environment Variables Backend
 ```bash
-PORT=3000
-NODE_ENV=production
-DB_HOST=localhost
-DB_USER=datacraft_user
-DB_PASS=secure_password_here
-DB_NAME=datacraft_metadata
-CORS_ORIGIN=https://yourdomain.com
+PORT=4000
+NODE_ENV=development
 ```
 
 ---

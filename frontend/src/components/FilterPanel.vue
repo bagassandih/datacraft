@@ -36,7 +36,7 @@
                 :key="node.id"
                 class="alias-item-row"
               >
-                <label class="alias-label-compact">{{ node.data.table }}</label>
+                <label class="alias-label-compact" :title="node.data.table">{{ node.data.table }}</label>
                 <n-input
                   :value="node.data.alias"
                   @update:value="(value) => updateAlias(node.id, value)"
@@ -882,14 +882,19 @@ const updateAlias = (nodeId, newAlias) => {
 .alias-label-compact {
   color: #8896a8;
   font-size: 0.8rem;
-  min-width: 110px;
+  min-width: 80px;
+  max-width: 140px;
   font-family: monospace;
   font-weight: 500;
   flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
 }
 
 .alias-input-compact {
   flex: 1;
-  min-width: 0;
+  min-width: 100px;
 }
 </style>

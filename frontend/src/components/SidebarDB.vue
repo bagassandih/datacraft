@@ -157,16 +157,16 @@ onUnmounted(() => {
 })
 
 const addTableToCanvas = (table) => {
-  // Check if table already exists
-  const exists = craftStore.nodes.find(n => n.id === table.name)
-  if (exists) {
-    message.warning(`Table ${table.name} already added`)
-    return
-  }
+  // Generate unique ID for the node
+  // Format: tablename_timestamp to ensure uniqueness
+  const uniqueId = `${table.name}_${Date.now()}`
+
+  // Count how many times this table has been added
+  const tableCount = craftStore.nodes.filter(n => n.data.table === table.name).length
 
   // Add node to store (CanvasCraft will handle positioning)
   const newNode = {
-    id: table.name,
+    id: uniqueId,
     type: 'custom',
     position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 },
     data: {
@@ -177,7 +177,13 @@ const addTableToCanvas = (table) => {
   }
 
   craftStore.addNode(newNode)
-  message.success(`Added ${table.name} to canvas`)
+
+  // Show appropriate message
+  if (tableCount > 0) {
+    message.success(`Added ${table.name} to canvas (instance ${tableCount + 1})`)
+  } else {
+    message.success(`Added ${table.name} to canvas`)
+  }
 }
 
 const refreshSchema = async () => {

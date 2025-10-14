@@ -185,8 +185,8 @@ const onConnect = (params) => {
     data: {
       joinType: 'INNER',
       sourceColumn: sourceColumn,
-      targetColumn: targetColumn,
-      condition: `${sourceTable}.${sourceColumn} = ${targetTable}.${targetColumn}`
+      targetColumn: targetColumn
+      // Don't store condition - let backend generate it with correct aliases
     }
   }
 

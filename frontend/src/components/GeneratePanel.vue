@@ -96,9 +96,17 @@ const handleGenerate = async () => {
   try {
     generating.value = true
 
-    // Prepare nodes with aliases and selected columns
-    const nodes = craftStore.nodes.map(node => ({
-      id: node.data.table,
+    // Create a mapping from node ID to a unique identifier
+    // This is needed because the same table can appear multiple times
+    const nodeIdMap = new Map()
+    craftStore.nodes.forEach((node, index) => {
+      nodeIdMap.set(node.id, `${node.data.table}_${index}`)
+    })
+
+    // Prepare nodes with unique IDs, aliases and selected columns
+    const nodes = craftStore.nodes.map((node, index) => ({
+      id: `${node.data.table}_${index}`, // Use table name + index for uniqueness
+      tableName: node.data.table, // Keep original table name
       alias: node.data.alias || node.data.table,
       // Only include columns that are explicitly selected
       columns: (node.data.selectedColumns && node.data.selectedColumns.length > 0)
@@ -106,9 +114,16 @@ const handleGenerate = async () => {
         : []
     }))
 
+    // Map edges to use the new unique IDs
+    const edges = craftStore.edges.map(edge => ({
+      ...edge,
+      source: nodeIdMap.get(edge.source),
+      target: nodeIdMap.get(edge.target)
+    }))
+
     const result = await dbService.generateQuery({
       nodes,
-      edges: craftStore.edges,
+      edges,
       filters: craftStore.queryClauses.filters,
       orderBy: craftStore.queryClauses.orderBy,
       groupBy: craftStore.queryClauses.groupBy,

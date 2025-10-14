@@ -103,16 +103,17 @@ const computedAlias = computed(() => {
 // Watch for changes and update store
 watch(selectedColumnsMap, (newMap) => {
   const selectedCols = Object.keys(newMap).filter(key => newMap[key])
-  const nodeIndex = craftStore.nodes.findIndex(n => n.data?.table === props.data.table)
+  // Use node ID instead of table name to find correct node
+  const nodeIndex = craftStore.nodes.findIndex(n => n.id === props.id)
   if (nodeIndex !== -1) {
     craftStore.nodes[nodeIndex].data.selectedColumns = selectedCols
   }
 }, { deep: true })
 
 const removeNode = () => {
-  const node = craftStore.nodes.find(n => n.data?.table === props.data.table)
-  if (node) {
-    craftStore.removeNode(node.id)
+  // Use node ID from props
+  if (props.id) {
+    craftStore.removeNode(props.id)
   }
 }
 
@@ -143,8 +144,8 @@ const startResize = (event) => {
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
 
-    // Only update store once when done
-    const nodeIndex = craftStore.nodes.findIndex(n => n.data?.table === props.data.table)
+    // Only update store once when done - use node ID
+    const nodeIndex = craftStore.nodes.findIndex(n => n.id === props.id)
     if (nodeIndex !== -1) {
       craftStore.nodes[nodeIndex].data.width = nodeWidth.value
     }
@@ -195,8 +196,8 @@ const startHeaderResize = (event) => {
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
 
-    // Only update store once when done
-    const nodeIndex = craftStore.nodes.findIndex(n => n.data?.table === props.data.table)
+    // Only update store once when done - use node ID
+    const nodeIndex = craftStore.nodes.findIndex(n => n.id === props.id)
     if (nodeIndex !== -1) {
       craftStore.nodes[nodeIndex].data.width = nodeWidth.value
     }

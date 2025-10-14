@@ -15,12 +15,105 @@ export function buildQuery(nodes, edges, clauses = {}) {
     throw new Error('No tables selected');
   }
 
-  // Build SELECT clause with column aliases to avoid ambiguity
+  // STEP 1: Build alias mapping for all nodes FIRST
+  // This ensures consistent aliases across SELECT and JOIN clauses
+  const firstNode = nodes[0];
+  const firstTableName = firstNode.tableName || firstNode.id;
+  const firstAlias = firstNode.alias || firstNode.id;
+
+  // Track aliases: Map from node ID to final alias
+  const nodeAliasMap = new Map();
+  // Track which table names have been used
+  const usedTableAliases = new Map();
+
+  // First table is in FROM clause
+  nodeAliasMap.set(firstNode.id, firstAlias);
+  usedTableAliases.set(firstTableName, [firstAlias]);
+
+  // Pre-process all edges to determine final aliases for all nodes
+  edges.forEach(edge => {
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const targetNode = nodes.find(n => n.id === edge.target);
+
+    if (!sourceNode || !targetNode) {
+      return;
+    }
+
+    const sourceTableName = sourceNode.tableName || sourceNode.id;
+    const targetTableName = targetNode.tableName || targetNode.id;
+
+    // Set source alias if not already set
+    if (!nodeAliasMap.has(sourceNode.id)) {
+      let sourceAlias = sourceNode.alias || sourceNode.id;
+      const usedAliasesForSourceTable = usedTableAliases.get(sourceTableName) || [];
+
+      // Check if user provided a custom alias (different from table name)
+      const isCustomSourceAlias = sourceNode.alias && sourceNode.alias !== sourceTableName;
+
+      if (usedAliasesForSourceTable.length > 0) {
+        // Table already used
+        const isAliasTaken = usedAliasesForSourceTable.includes(sourceAlias);
+
+        if (isCustomSourceAlias && !isAliasTaken) {
+          // User provided custom alias and it's not taken - use it as is
+        } else {
+          // Generate unique alias
+          sourceAlias = `${sourceAlias}_${usedAliasesForSourceTable.length}`;
+        }
+      }
+
+      nodeAliasMap.set(sourceNode.id, sourceAlias);
+      if (!usedTableAliases.has(sourceTableName)) {
+        usedTableAliases.set(sourceTableName, []);
+      }
+      usedTableAliases.get(sourceTableName).push(sourceAlias);
+    }
+
+    // Set target alias if not already set
+    if (!nodeAliasMap.has(targetNode.id)) {
+      let targetAlias = targetNode.alias || targetNode.id;
+      const usedAliasesForTable = usedTableAliases.get(targetTableName) || [];
+
+      // Check if user provided a custom alias (different from table name)
+      const isCustomAlias = targetNode.alias && targetNode.alias !== targetTableName;
+
+      if (usedAliasesForTable.length > 0) {
+        // Table already used
+
+        // Check if the custom alias is already taken by another node
+        const isAliasTaken = usedAliasesForTable.includes(targetAlias);
+
+        if (isCustomAlias && !isAliasTaken) {
+          // User provided custom alias and it's not taken - use it as is
+          // Don't modify it
+        } else {
+          // Either no custom alias, or custom alias is already taken
+          // Generate unique alias
+          const sourceColumn = edge.data?.sourceColumn;
+          if (sourceColumn) {
+            const columnPart = sourceColumn.replace(/_id$|_user_id$|_fk$/, '').replace(/_/g, '');
+            targetAlias = `${targetAlias}_${columnPart}`;
+          } else {
+            targetAlias = `${targetAlias}_${usedAliasesForTable.length}`;
+          }
+        }
+      }
+
+      nodeAliasMap.set(targetNode.id, targetAlias);
+      if (!usedTableAliases.has(targetTableName)) {
+        usedTableAliases.set(targetTableName, []);
+      }
+      usedTableAliases.get(targetTableName).push(targetAlias);
+    }
+  });
+
+  // STEP 2: Build SELECT clause using final aliases from nodeAliasMap
   const selectParts = [];
   const columnCount = {}; // Track column name occurrences
 
   nodes.forEach(node => {
-    const alias = node.alias || node.id;
+    // Use final alias from map
+    const alias = nodeAliasMap.get(node.id) || node.alias || node.id;
     const columns = node.columns || [];
 
     // Only add columns if user has selected any
@@ -44,21 +137,18 @@ export function buildQuery(nodes, edges, clauses = {}) {
   } else {
     // Fallback: SELECT alias.* for each table to avoid ambiguity
     const allTableSelects = nodes.map(node => {
-      const alias = node.alias || node.id;
+      const alias = nodeAliasMap.get(node.id) || node.alias || node.id;
       return `${alias}.*`;
     });
     selectClause = `SELECT ${allTableSelects.join(', ')}`;
   }
 
-  // Build FROM clause (first table)
-  const firstNode = nodes[0];
-  const firstAlias = firstNode.alias || firstNode.id;
-  // Only add alias if it's different from table name
-  const fromClause = firstAlias !== firstNode.id
-    ? `FROM ${firstNode.id} ${firstAlias}`
-    : `FROM ${firstNode.id}`;
+  // STEP 3: Build FROM clause
+  const fromClause = firstAlias !== firstTableName
+    ? `FROM ${firstTableName} ${firstAlias}`
+    : `FROM ${firstTableName}`;
 
-  // Build JOIN clauses
+  // STEP 4: Build JOIN clauses using final aliases from nodeAliasMap
   const joinClauses = [];
   edges.forEach(edge => {
     const sourceNode = nodes.find(n => n.id === edge.source);
@@ -68,10 +158,15 @@ export function buildQuery(nodes, edges, clauses = {}) {
       return;
     }
 
-    const sourceAlias = sourceNode.alias || sourceNode.id;
-    const targetAlias = targetNode.alias || targetNode.id;
+    // Get table names
+    const sourceTableName = sourceNode.tableName || sourceNode.id;
+    const targetTableName = targetNode.tableName || targetNode.id;
 
-    // Get join type from edge data or edge itself
+    // Get final aliases from pre-built map
+    const sourceAlias = nodeAliasMap.get(sourceNode.id);
+    const targetAlias = nodeAliasMap.get(targetNode.id);
+
+    // Get join type
     const joinType = edge.data?.joinType || edge.joinType || 'INNER';
 
     // Determine join condition
@@ -79,35 +174,31 @@ export function buildQuery(nodes, edges, clauses = {}) {
 
     if (edge.data?.condition) {
       // 1. Use explicit condition from edge.data
-      // Replace table names with aliases
       joinCondition = edge.data.condition
-        .replace(new RegExp(`\\b${sourceNode.id}\\b`, 'g'), sourceAlias)
-        .replace(new RegExp(`\\b${targetNode.id}\\b`, 'g'), targetAlias);
+        .replace(new RegExp(`\\b${sourceTableName}\\b`, 'g'), sourceAlias)
+        .replace(new RegExp(`\\b${targetTableName}\\b`, 'g'), targetAlias);
     } else if (edge.data?.sourceColumn && edge.data?.targetColumn) {
       // 2. Use specific columns from edge data (column-level join)
       joinCondition = `${sourceAlias}.${edge.data.sourceColumn} = ${targetAlias}.${edge.data.targetColumn}`;
     } else if (edge.condition) {
       // 3. Use condition from edge
-      // Replace table names with aliases
       joinCondition = edge.condition
-        .replace(new RegExp(`\\b${sourceNode.id}\\b`, 'g'), sourceAlias)
-        .replace(new RegExp(`\\b${targetNode.id}\\b`, 'g'), targetAlias);
+        .replace(new RegExp(`\\b${sourceTableName}\\b`, 'g'), sourceAlias)
+        .replace(new RegExp(`\\b${targetTableName}\\b`, 'g'), targetAlias);
     } else {
       // 4. Default: assume foreign key naming convention (table_id)
-      joinCondition = `${sourceAlias}.${edge.target}_id = ${targetAlias}.id`;
+      joinCondition = `${sourceAlias}.${targetTableName}_id = ${targetAlias}.id`;
     }
 
-    // Only add alias if it's different from table name
-    const joinTablePart = targetAlias !== targetNode.id
-      ? `${targetNode.id} ${targetAlias}`
-      : targetNode.id;
+    // Always add alias for joined tables
+    const joinTablePart = `${targetTableName} ${targetAlias}`;
 
     joinClauses.push(
       `${joinType} JOIN ${joinTablePart} ON ${joinCondition}`
     );
   });
 
-  // Build WHERE clause from filters
+  // STEP 5: Build WHERE clause from filters using consistent aliases
   const whereClauses = [];
   if (filters && filters.length > 0) {
     // Filter out incomplete filters
@@ -119,8 +210,9 @@ export function buildQuery(nodes, edges, clauses = {}) {
     });
 
     validFilters.forEach((filter, index) => {
-      const node = nodes.find(n => n.id === filter.table);
-      const alias = node?.alias || filter.table;
+      // Find node by table name and get its final alias from map
+      const node = nodes.find(n => (n.tableName || n.id) === filter.table);
+      const alias = node ? nodeAliasMap.get(node.id) : filter.table;
 
       let clause = `${alias}.${filter.column} ${filter.operator}`;
 
@@ -146,24 +238,26 @@ export function buildQuery(nodes, edges, clauses = {}) {
     });
   }
 
-  // Build GROUP BY clause
+  // STEP 6: Build GROUP BY clause using consistent aliases
   const groupByParts = [];
   if (groupBy && groupBy.length > 0) {
     const validGroups = groupBy.filter(g => g.table && g.column);
     validGroups.forEach(group => {
-      const node = nodes.find(n => n.id === group.table);
-      const alias = node?.alias || group.table;
+      // Find node by table name and get its final alias from map
+      const node = nodes.find(n => (n.tableName || n.id) === group.table);
+      const alias = node ? nodeAliasMap.get(node.id) : group.table;
       groupByParts.push(`${alias}.${group.column}`);
     });
   }
 
-  // Build HAVING clause
+  // STEP 7: Build HAVING clause using consistent aliases
   const havingClauses = [];
   if (having && having.length > 0) {
     const validHaving = having.filter(h => h.aggregate && h.table && h.column && h.value);
     validHaving.forEach((havingItem, index) => {
-      const node = nodes.find(n => n.id === havingItem.table);
-      const alias = node?.alias || havingItem.table;
+      // Find node by table name and get its final alias from map
+      const node = nodes.find(n => (n.tableName || n.id) === havingItem.table);
+      const alias = node ? nodeAliasMap.get(node.id) : havingItem.table;
 
       let clause = `${havingItem.aggregate}(${alias}.${havingItem.column}) ${havingItem.operator}`;
 
@@ -179,13 +273,14 @@ export function buildQuery(nodes, edges, clauses = {}) {
     });
   }
 
-  // Build ORDER BY clause
+  // STEP 8: Build ORDER BY clause using consistent aliases
   const orderByParts = [];
   if (orderBy && orderBy.length > 0) {
     const validOrders = orderBy.filter(o => o.table && o.column);
     validOrders.forEach(order => {
-      const node = nodes.find(n => n.id === order.table);
-      const alias = node?.alias || order.table;
+      // Find node by table name and get its final alias from map
+      const node = nodes.find(n => (n.tableName || n.id) === order.table);
+      const alias = node ? nodeAliasMap.get(node.id) : order.table;
       const direction = order.direction || 'ASC';
       orderByParts.push(`${alias}.${order.column} ${direction}`);
     });

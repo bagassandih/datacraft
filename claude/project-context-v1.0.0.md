@@ -8,7 +8,7 @@
 
 ## 📋 Quick Overview
 
-**DataCraft** adalah aplikasi full-stack **Visual SQL Query Builder** yang memungkinkan developer membuat SQL query kompleks secara visual menggunakan drag-and-drop interface. Project ini lahir dari frustrasi developer yang sering lupa nama kolom, relasi tabel, dan harus menulis JOIN query manual yang repetitif.
+**DataCraft** is a full-stack **Visual SQL Query Builder** that enables developers to create complex SQL queries visually using a drag-and-drop interface. This project was born from the frustration developers often face when forgetting column names, table relationships, and having to write repetitive JOIN queries manually.
 
 ### Core Philosophy
 > **"Less typing, more thinking."**
@@ -18,19 +18,19 @@
 ## 🎯 Project Purpose
 
 ### Problem Statement
-Backend developer sering menghadapi:
-- Lupa nama kolom exact dalam database
-- Bingung relasi antar tabel (foreign key mana yang connect ke mana)
-- Menulis query JOIN manual yang repetitif dan error-prone
-- Switch antara dokumentasi, ER diagram, dan SQL console
+Backend developers often face:
+- Forgetting exact column names in the database
+- Confusion about table relationships (which foreign key connects to what)
+- Writing repetitive and error-prone manual JOIN queries
+- Constantly switching between documentation, ER diagrams, and SQL console
 
 ### Solution
-DataCraft menyediakan:
-- ✅ Visual canvas untuk drag & drop tabel
-- ✅ Auto-detect relationship antar tabel
-- ✅ Column-level selection dengan checkbox
+DataCraft provides:
+- ✅ Visual canvas for drag & drop tables
+- ✅ Auto-detect relationships between tables
+- ✅ Column-level selection with checkboxes
 - ✅ Real-time SQL query generation
-- ✅ Support complex queries: JOIN, WHERE, ORDER BY, GROUP BY, HAVING
+- ✅ Support for complex queries: JOIN, WHERE, ORDER BY, GROUP BY, HAVING
 - ✅ Query execution & result preview
 
 ---
@@ -115,27 +115,27 @@ datacraft/
 
 ## ✅ Completed Features
 
-### Phase 1: Foundation (Days 1-2)
+### Phase 1: Foundation 
 - [x] Project setup (Vue 3 + Express)
 - [x] Database connection system
 - [x] Connection form UI with validation
 - [x] Schema introspection (SHOW TABLES, DESCRIBE)
 - [x] MySQL connection pooling
 
-### Phase 2: Visual Canvas (Days 3-4)
+### Phase 2: Visual Canvas
 - [x] Vue Flow integration
 - [x] Custom table node component
 - [x] Drag & drop functionality
 - [x] Node positioning system
 
-### Phase 3: Column Selection & Joins (Days 5-6)
+### Phase 3: Column Selection & Joins
 - [x] Column-level checkboxes
 - [x] Connection handles per column
 - [x] Visual connection lines
 - [x] Drag to create joins
 - [x] JOIN metadata parsing
 
-### Phase 4: Smart Alias System (Day 7)
+### Phase 4: Smart Alias System
 - [x] Centralized alias generator
 - [x] Conflict resolution algorithm
 - [x] Auto-update on node add/remove
@@ -146,7 +146,7 @@ datacraft/
 2. Conflict: add letters (`u` → `us` → `use`)
 3. Still conflict: numbered suffix (`u2`, `u3`)
 
-### Phase 5: Query Builder Panels (Days 8-10)
+### Phase 5: Query Builder Panels
 - [x] **WHERE Clause Builder**
   - 12 operators: =, !=, >, <, >=, <=, LIKE, NOT LIKE, IN, NOT IN, IS NULL, IS NOT NULL
   - AND/OR logic
@@ -286,19 +286,19 @@ datacraft/
 ## 🎨 Design Patterns Used
 
 ### 1. **Single Source of Truth**
-- Pinia store sebagai satu-satunya state source
-- UI components read-only dari store
-- All mutations melalui store actions
+- Pinia store as the single state source
+- UI components read-only from store
+- All mutations through store actions
 
 ### 2. **Reactive State Management**
-- Deep watch untuk nested objects (nodes, edges)
-- Computed properties untuk live preview
-- Auto-save dengan watch + debounce
+- Deep watch for nested objects (nodes, edges)
+- Computed properties for live preview
+- Auto-save with watch + debounce
 
 ### 3. **Centralized Business Logic**
-- `aliasGenerator.js` untuk alias logic
-- `query-builder.js` untuk SQL generation
-- `dbService.js` untuk API communication
+- `aliasGenerator.js` for alias logic
+- `query-builder.js` for SQL generation
+- `dbService.js` for API communication
 
 ### 4. **Component Composition**
 - Reusable components (TableNode, FilterPanel)
@@ -324,24 +324,24 @@ datacraft/
 ## 📝 Important Notes for Future Development
 
 ### 1. **State Management**
-- Always update store, bukan langsung manipulate Vue Flow state
-- Deep watch needed untuk nodes/edges (karena nested objects)
-- localStorage sync happens on every state change (consider debounce untuk production)
+- Always update store, not directly manipulate Vue Flow state
+- Deep watch needed for nodes/edges (due to nested objects)
+- localStorage sync happens on every state change (consider debounce for production)
 
 ### 2. **Vue Flow Gotchas**
-- `nodrag` class needed untuk prevent drag during resize
-- Edge deletion harus via store, bukan Vue Flow methods
-- Handle positions calculated dari node position + offsets
+- `nodrag` class needed to prevent drag during resize
+- Edge deletion must be via store, not Vue Flow methods
+- Handle positions calculated from node position + offsets
 
 ### 3. **SQL Generation**
-- User column selection diabaikan jika tidak masuk GROUP BY
-- MySQL strict mode (`only_full_group_by`) mempengaruhi query validity
-- Alias consistency crucial untuk multi-table queries
+- User column selection is ignored if not included in GROUP BY
+- MySQL strict mode (`only_full_group_by`) affects query validity
+- Alias consistency crucial for multi-table queries
 
 ### 4. **Browser Compatibility**
-- Pinch zoom works di trackpad (Mac/Windows)
+- Pinch zoom works on trackpad (Mac/Windows)
 - Mouse wheel zoom disabled (user preference)
-- Tested di Chrome, Firefox, Safari, Edge
+- Tested on Chrome, Firefox, Safari, Edge
 
 ---
 
@@ -400,7 +400,7 @@ npm run dev     # http://localhost:5173
 
 ### Environment Variables
 Currently none required (development mode).
-Production akan butuh:
+Production will require:
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`
 - `CORS_ORIGIN`
 - `NODE_ENV=production`
@@ -410,21 +410,21 @@ Production akan butuh:
 ## 📚 Key Learnings & Insights
 
 ### Technical Lessons
-1. **State synchronization** adalah challenge terbesar - solved dengan single source of truth
-2. **Performance optimization** butuh profiling dulu, baru optimize - RAF solved resize lag
-3. **Reactivity** di Vue 3 powerful tapi butuh deep understanding - especially untuk nested objects
-4. **Event handling** butuh careful stopPropagation - prevent conflicts antar components
+1. **State synchronization** is the biggest challenge - solved with single source of truth
+2. **Performance optimization** requires profiling first, then optimize - RAF solved resize lag
+3. **Reactivity** in Vue 3 is powerful but requires deep understanding - especially for nested objects
+4. **Event handling** needs careful stopPropagation - prevent conflicts between components
 
 ### UX Lessons
 1. **Visual feedback** critical - immediate response builds trust
-2. **Error messages** harus actionable - "what went wrong" + "how to fix"
+2. **Error messages** must be actionable - "what went wrong" + "how to fix"
 3. **Smart defaults** reduce cognitive load - auto-alias, auto-join detection
 4. **Progressive disclosure** - basic features visible, advanced features contextual
 
 ### Process Lessons
 1. **Incremental development** easier to debug - small iterations win
 2. **User feedback** drives real improvements - listen to pain points
-3. **Refactoring** adalah investment - don't fear rewrites
+3. **Refactoring** is an investment - don't fear rewrites
 4. **Documentation** as you go - don't wait until end
 
 ---
@@ -457,7 +457,6 @@ Production akan butuh:
 
 ## 📦 Project Statistics
 
-- **Development Time**: 21 days
 - **Total Files**: ~25 core files
 - **Lines of Code**: ~3,300
 - **Components**: 7 Vue components
@@ -540,15 +539,15 @@ const { rows, count } = await dbService.executeQuery(query)
 
 ## 🎬 Conclusion
 
-**DataCraft v1.0** adalah full-stack visual SQL builder yang production-ready. Project ini berhasil mencapai semua tujuan awal: menyederhanakan pembuatan SQL query kompleks melalui interface visual yang intuitif.
+**DataCraft v1.0** is a production-ready full-stack visual SQL builder. This project successfully achieved all initial goals: simplifying the creation of complex SQL queries through an intuitive visual interface.
 
-Dengan 21 hari development, 11 fase iterasi, dan 30+ bug fixes, project ini mendemonstrasikan:
+With 11 iteration phases and 30+ bug fixes, this project demonstrates:
 - Clean architecture & code organization
 - Performance optimization techniques
 - User-centered design thinking
 - Comprehensive documentation practices
 
-**Next Steps**: Implement v1.5 features (query management) dan expand database support (PostgreSQL, SQLite).
+**Next Steps**: Implement v1.5 features (query management) and expand database support (PostgreSQL, SQLite).
 
 ---
 

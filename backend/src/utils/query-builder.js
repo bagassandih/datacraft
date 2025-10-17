@@ -15,9 +15,36 @@ export function buildQuery(nodes, edges, clauses = {}) {
     throw new Error('No tables selected');
   }
 
+  // STEP 0: Determine the best starting table (FROM clause)
+  // Use the leftmost table (smallest X position) as the root
+  // This follows the visual left-to-right flow
+  const determineRootTable = (nodes, edges) => {
+    if (nodes.length === 0) {
+      return null;
+    }
+
+    if (nodes.length === 1) {
+      return nodes[0];
+    }
+
+    // Find the node with the smallest X position (leftmost)
+    let leftmostNode = nodes[0];
+    let minX = nodes[0].position?.x ?? Infinity;
+
+    nodes.forEach(node => {
+      const nodeX = node.position?.x ?? Infinity;
+      if (nodeX < minX) {
+        minX = nodeX;
+        leftmostNode = node;
+      }
+    });
+
+    return leftmostNode;
+  };
+
   // STEP 1: Build alias mapping for all nodes FIRST
   // This ensures consistent aliases across SELECT and JOIN clauses
-  const firstNode = nodes[0];
+  const firstNode = determineRootTable(nodes, edges);
   const firstTableName = firstNode.tableName || firstNode.id;
   const firstAlias = firstNode.alias || firstNode.id;
 
@@ -108,10 +135,17 @@ export function buildQuery(nodes, edges, clauses = {}) {
   });
 
   // STEP 2: Build SELECT clause using final aliases from nodeAliasMap
+  // Sort nodes by X position (left to right) for consistent column ordering
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const posA = a.position?.x ?? Infinity;
+    const posB = b.position?.x ?? Infinity;
+    return posA - posB;
+  });
+
   const selectParts = [];
   const columnCount = {}; // Track column name occurrences
 
-  nodes.forEach(node => {
+  sortedNodes.forEach(node => {
     // Use final alias from map
     const alias = nodeAliasMap.get(node.id) || node.alias || node.id;
     const columns = node.columns || [];
@@ -148,55 +182,123 @@ export function buildQuery(nodes, edges, clauses = {}) {
     ? `FROM ${firstTableName} ${firstAlias}`
     : `FROM ${firstTableName}`;
 
-  // STEP 4: Build JOIN clauses using final aliases from nodeAliasMap
-  const joinClauses = [];
-  edges.forEach(edge => {
-    const sourceNode = nodes.find(n => n.id === edge.source);
-    const targetNode = nodes.find(n => n.id === edge.target);
+  // STEP 4: Build JOIN clauses in correct order based on visual position
+  // Sort edges based on target node X position (left to right)
+  const sortedEdges = [...edges].sort((a, b) => {
+    const nodeA = nodes.find(n => n.id === a.target);
+    const nodeB = nodes.find(n => n.id === b.target);
 
-    if (!sourceNode || !targetNode) {
-      return;
-    }
+    const posA = nodeA?.position?.x ?? Infinity;
+    const posB = nodeB?.position?.x ?? Infinity;
 
-    // Get table names
-    const sourceTableName = sourceNode.tableName || sourceNode.id;
-    const targetTableName = targetNode.tableName || targetNode.id;
-
-    // Get final aliases from pre-built map
-    const sourceAlias = nodeAliasMap.get(sourceNode.id);
-    const targetAlias = nodeAliasMap.get(targetNode.id);
-
-    // Get join type
-    const joinType = edge.data?.joinType || edge.joinType || 'INNER';
-
-    // Determine join condition
-    let joinCondition;
-
-    if (edge.data?.condition) {
-      // 1. Use explicit condition from edge.data
-      joinCondition = edge.data.condition
-        .replace(new RegExp(`\\b${sourceTableName}\\b`, 'g'), sourceAlias)
-        .replace(new RegExp(`\\b${targetTableName}\\b`, 'g'), targetAlias);
-    } else if (edge.data?.sourceColumn && edge.data?.targetColumn) {
-      // 2. Use specific columns from edge data (column-level join)
-      joinCondition = `${sourceAlias}.${edge.data.sourceColumn} = ${targetAlias}.${edge.data.targetColumn}`;
-    } else if (edge.condition) {
-      // 3. Use condition from edge
-      joinCondition = edge.condition
-        .replace(new RegExp(`\\b${sourceTableName}\\b`, 'g'), sourceAlias)
-        .replace(new RegExp(`\\b${targetTableName}\\b`, 'g'), targetAlias);
-    } else {
-      // 4. Default: assume foreign key naming convention (table_id)
-      joinCondition = `${sourceAlias}.${targetTableName}_id = ${targetAlias}.id`;
-    }
-
-    // Always add alias for joined tables
-    const joinTablePart = `${targetTableName} ${targetAlias}`;
-
-    joinClauses.push(
-      `${joinType} JOIN ${joinTablePart} ON ${joinCondition}`
-    );
+    return posA - posB;
   });
+
+  const joinClauses = [];
+  const joinedNodes = new Set([firstNode.id]); // Track which nodes are already in the query
+
+  // Process edges in sorted order, but only if dependencies are met
+  let remainingEdges = [...sortedEdges];
+  let maxIterations = sortedEdges.length * 2;
+  let iterations = 0;
+
+  while (remainingEdges.length > 0 && iterations < maxIterations) {
+    iterations++;
+    let madeProgress = false;
+
+    for (let i = remainingEdges.length - 1; i >= 0; i--) {
+      const edge = remainingEdges[i];
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      const targetNode = nodes.find(n => n.id === edge.target);
+
+      if (!sourceNode || !targetNode) {
+        remainingEdges.splice(i, 1);
+        continue;
+      }
+
+      // Check if source is already in query
+      const sourceInQuery = joinedNodes.has(sourceNode.id);
+      const targetInQuery = joinedNodes.has(targetNode.id);
+
+      // Skip if both already in query
+      if (sourceInQuery && targetInQuery) {
+        remainingEdges.splice(i, 1);
+        continue;
+      }
+
+      // Can only process if source is in query (or target is and we reverse)
+      if (!sourceInQuery && !targetInQuery) {
+        continue; // Can't process yet, need dependencies
+      }
+
+      // Determine which node to join
+      let nodeToJoin, baseNode;
+      if (sourceInQuery && !targetInQuery) {
+        nodeToJoin = targetNode;
+        baseNode = sourceNode;
+      } else if (!sourceInQuery && targetInQuery) {
+        nodeToJoin = sourceNode;
+        baseNode = targetNode;
+      } else {
+        remainingEdges.splice(i, 1);
+        continue;
+      }
+
+      // Get table names
+      const sourceTableName = sourceNode.tableName || sourceNode.id;
+      const targetTableName = targetNode.tableName || targetNode.id;
+
+      // Get final aliases from pre-built map
+      const sourceAlias = nodeAliasMap.get(sourceNode.id);
+      const targetAlias = nodeAliasMap.get(targetNode.id);
+      const nodeToJoinAlias = nodeAliasMap.get(nodeToJoin.id);
+      const nodeToJoinTableName = nodeToJoin.tableName || nodeToJoin.id;
+
+      // Get join type
+      const joinType = edge.data?.joinType || edge.joinType || 'INNER';
+
+      // Determine join condition
+      let joinCondition;
+
+      if (edge.data?.condition) {
+        // 1. Use explicit condition from edge.data
+        joinCondition = edge.data.condition
+          .replace(new RegExp(`\\b${sourceTableName}\\b`, 'g'), sourceAlias)
+          .replace(new RegExp(`\\b${targetTableName}\\b`, 'g'), targetAlias);
+      } else if (edge.data?.sourceColumn && edge.data?.targetColumn) {
+        // 2. Use specific columns from edge data (column-level join)
+        joinCondition = `${sourceAlias}.${edge.data.sourceColumn} = ${targetAlias}.${edge.data.targetColumn}`;
+      } else if (edge.condition) {
+        // 3. Use condition from edge
+        joinCondition = edge.condition
+          .replace(new RegExp(`\\b${sourceTableName}\\b`, 'g'), sourceAlias)
+          .replace(new RegExp(`\\b${targetTableName}\\b`, 'g'), targetAlias);
+      } else {
+        // 4. Default: assume foreign key naming convention (table_id)
+        const baseAlias = nodeAliasMap.get(baseNode.id);
+        joinCondition = `${baseAlias}.${nodeToJoinTableName}_id = ${nodeToJoinAlias}.id`;
+      }
+
+      // Always add alias for joined tables
+      const joinTablePart = `${nodeToJoinTableName} ${nodeToJoinAlias}`;
+
+      joinClauses.push(
+        `${joinType} JOIN ${joinTablePart} ON ${joinCondition}`
+      );
+
+      // Mark node as joined
+      joinedNodes.add(nodeToJoin.id);
+
+      // Remove from remaining
+      remainingEdges.splice(i, 1);
+      madeProgress = true;
+    }
+
+    // Break if no progress to avoid infinite loop
+    if (!madeProgress && remainingEdges.length > 0) {
+      break;
+    }
+  }
 
   // STEP 5: Build WHERE clause from filters using consistent aliases
   const whereClauses = [];

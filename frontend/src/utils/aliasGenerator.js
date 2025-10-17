@@ -7,9 +7,16 @@ export function generateUniqueAliases(nodes) {
   const aliasMap = new Map()
   const usedAliases = new Set()
 
+  // Sort nodes by X position (left to right) for consistent alias ordering
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const posA = a.position?.x ?? Infinity
+    const posB = b.position?.x ?? Infinity
+    return posA - posB
+  })
+
   // Count occurrences of each table name
   const tableCount = {}
-  nodes.forEach(node => {
+  sortedNodes.forEach(node => {
     const tableName = node.data?.table || node.id
     tableCount[tableName] = (tableCount[tableName] || 0) + 1
   })
@@ -17,7 +24,7 @@ export function generateUniqueAliases(nodes) {
   // Track which occurrence this is for each table
   const tableOccurrence = {}
 
-  nodes.forEach(node => {
+  sortedNodes.forEach(node => {
     const nodeId = node.id
     const tableName = node.data?.table || node.id
     let alias = node.data?.alias

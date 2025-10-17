@@ -32,7 +32,7 @@
 
             <n-space vertical :size="8">
               <div
-                v-for="node in craftStore.nodes"
+                v-for="node in sortedNodes"
                 :key="node.id"
                 class="alias-item-row"
               >
@@ -387,6 +387,15 @@ const filters = ref([])
 const orderBy = ref([])
 const groupBy = ref([])
 const havingConditions = ref([])
+
+// Sorted nodes by X position (left to right) for consistent display
+const sortedNodes = computed(() => {
+  return [...craftStore.nodes].sort((a, b) => {
+    const posA = a.position?.x ?? Infinity
+    const posB = b.position?.x ?? Infinity
+    return posA - posB
+  })
+})
 
 const logicOptions = [
   { label: 'AND', value: 'AND' },

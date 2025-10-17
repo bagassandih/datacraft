@@ -28,6 +28,7 @@
       @edges-change="onEdgesChange"
       @connect="onConnect"
       @edge-click="onEdgeClick"
+      @viewport-change="onViewportChange"
     >
       <Background pattern-color="#2d3548" :gap="16" />
       <Controls />
@@ -93,8 +94,8 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
-import { VueFlow } from '@vue-flow/core'
+import { ref, watch, computed, onMounted } from 'vue'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { useMessage } from 'naive-ui'
@@ -105,6 +106,7 @@ import '@vue-flow/core/dist/theme-default.css'
 
 const message = useMessage()
 const craftStore = useCraftStore()
+const { project, getViewport } = useVueFlow()
 
 const nodes = ref(craftStore.nodes)
 const edges = ref(craftStore.edges)
@@ -240,6 +242,11 @@ const deleteEdgeFromModal = () => {
 const deleteEdge = (edgeId) => {
   craftStore.removeEdge(edgeId)
   message.success('Connection deleted')
+}
+
+// Track viewport changes (pan/zoom)
+const onViewportChange = (viewport) => {
+  craftStore.setViewport(viewport)
 }
 </script>
 

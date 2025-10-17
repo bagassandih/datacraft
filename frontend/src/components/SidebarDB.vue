@@ -164,11 +164,10 @@ const addTableToCanvas = (table) => {
   // Count how many times this table has been added
   const tableCount = craftStore.nodes.filter(n => n.data.table === table.name).length
 
-  // Add node to store (CanvasCraft will handle positioning)
-  const newNode = {
+  // Create node data (position will be calculated by store based on viewport)
+  const nodeData = {
     id: uniqueId,
     type: 'custom',
-    position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 },
     data: {
       table: table.name,
       columns: table.columns,
@@ -176,7 +175,8 @@ const addTableToCanvas = (table) => {
     }
   }
 
-  craftStore.addNode(newNode)
+  // Add node at viewport center
+  craftStore.addNodeAtViewportCenter(nodeData)
 
   // Show appropriate message
   if (tableCount > 0) {

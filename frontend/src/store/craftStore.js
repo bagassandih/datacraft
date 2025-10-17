@@ -57,9 +57,35 @@ export const useCraftStore = defineStore('craft', () => {
     schema.value = data
   }
 
+  // Store viewport state
+  const viewport = ref({ x: 0, y: 0, zoom: 1 })
+
+  function setViewport(vp) {
+    viewport.value = vp
+  }
+
   function addNode(node) {
     nodes.value.push(node)
     updateAliases()
+  }
+
+  // Add node at viewport center
+  function addNodeAtViewportCenter(nodeData) {
+    // Calculate center position based on current viewport
+    // Viewport dimensions (approximate canvas center)
+    const canvasWidth = window.innerWidth * 0.6 // Approximate canvas width
+    const canvasHeight = window.innerHeight
+
+    // Convert screen center to canvas coordinates
+    const centerX = (canvasWidth / 2 - viewport.value.x) / viewport.value.zoom
+    const centerY = (canvasHeight / 2 - viewport.value.y) / viewport.value.zoom
+
+    const node = {
+      ...nodeData,
+      position: { x: centerX, y: centerY }
+    }
+
+    addNode(node)
   }
 
   function removeNode(nodeId) {
@@ -215,6 +241,7 @@ export const useCraftStore = defineStore('craft', () => {
     queryClauses,
     loading,
     error,
+    viewport,
 
     // Getters
     isConnected,
@@ -225,7 +252,9 @@ export const useCraftStore = defineStore('craft', () => {
     setConnection,
     clearConnection,
     setSchema,
+    setViewport,
     addNode,
+    addNodeAtViewportCenter,
     removeNode,
     updateNode,
     setNodes,

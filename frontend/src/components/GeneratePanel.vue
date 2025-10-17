@@ -103,11 +103,12 @@ const handleGenerate = async () => {
       nodeIdMap.set(node.id, `${node.data.table}_${index}`)
     })
 
-    // Prepare nodes with unique IDs, aliases and selected columns
+    // Prepare nodes with unique IDs, aliases, selected columns, and position
     const nodes = craftStore.nodes.map((node, index) => ({
       id: `${node.data.table}_${index}`, // Use table name + index for uniqueness
       tableName: node.data.table, // Keep original table name
       alias: node.data.alias || node.data.table,
+      position: node.position, // Include position for visual ordering
       // Only include columns that are explicitly selected
       columns: (node.data.selectedColumns && node.data.selectedColumns.length > 0)
         ? node.data.selectedColumns

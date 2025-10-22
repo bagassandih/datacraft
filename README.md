@@ -16,10 +16,10 @@ A tool that helps developers focus on **what they want to extract**, not **how t
 ## 📷 Screenshot
 
 ### Full Panel
-<img width="1679" alt="Full Panel" src="https://github.com/user-attachments/assets/78623d92-abf4-4729-8afe-8809e7e2f60d" />
+<img width="1680" height="962" alt="image" src="https://github.com/user-attachments/assets/68434988-82a9-4606-9fc5-1f99d7f06b91" />
 
 ### Canvas Panel
-<img width="932" alt="Canvas Panel" src="https://github.com/user-attachments/assets/4391a763-7c85-427c-9c0e-d365fe6089d8" />
+<img width="941" height="962" alt="image" src="https://github.com/user-attachments/assets/d29780a4-13f9-48a8-8f88-a81b79bc8577" />
 
 ### Detail Panels
 <table align="center">
@@ -36,13 +36,13 @@ A tool that helps developers focus on **what they want to extract**, not **how t
   </tr>
   <tr>
     <td align="center">
-      <img width="300" src="https://github.com/user-attachments/assets/c03a74de-bab8-4441-9de5-671f7aececfe" /><br/>
+      <img width="300" src="https://github.com/user-attachments/assets/63fd5484-cab0-4b0f-b3bd-48d1779c130d" /><br/>
     </td>
     <td align="center">
-      <img width="300" src="https://github.com/user-attachments/assets/76626c06-2c89-4a3c-8937-dd01ab4192af" /><br/>
+      <img width="300" src="https://github.com/user-attachments/assets/9b3a7da2-e1d1-43c2-917b-6f19c621d96d" /><br/>
     </td>
     <td align="center">
-      <img width="300" src="https://github.com/user-attachments/assets/32ce6e8c-ce25-4693-b260-01c32597e651" /><br/>
+      <img width="300" src="https://github.com/user-attachments/assets/4ed9d4b8-66b8-4bf4-9bea-c49fd85003a6" /><br/>
     </td>
   </tr>
 </table>

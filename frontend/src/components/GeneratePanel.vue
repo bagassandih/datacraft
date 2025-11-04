@@ -65,7 +65,7 @@
                     :key="index"
                   >
                     <td v-for="(value, key) in row" :key="key">
-                      {{ value }}
+                      {{ formatValue(value) }}
                     </td>
                   </tr>
                 </tbody>
@@ -84,6 +84,7 @@ import { ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useCraftStore } from '@/store/craftStore'
 import { dbService } from '@/api/dbService'
+import { formatValue } from '@/utils/dateFormatter'
 
 const message = useMessage()
 const craftStore = useCraftStore()

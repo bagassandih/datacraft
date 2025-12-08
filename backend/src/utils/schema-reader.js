@@ -45,19 +45,35 @@ export async function getColumns(tableName) {
         column_name as name,
         data_type as type,
         is_nullable as nullable,
-        column_default as default_value
+        column_default as default_value,
+        collation_name as collation
       FROM information_schema.columns
       WHERE table_name = ?
       ORDER BY ordinal_position
     `, [tableName]);
     columns = result.rows;
   } else if (client === 'mysql2') {
-    const result = await db.raw('DESCRIBE ??', [tableName]);
+    const dbName = db.client.config.connection.database;
+    const result = await db.raw(`
+      SELECT
+        COLUMN_NAME as name,
+        COLUMN_TYPE as type,
+        IS_NULLABLE as nullable,
+        COLUMN_DEFAULT as default_value,
+        COLLATION_NAME as collation,
+        CHARACTER_SET_NAME as charset
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = ?
+      AND TABLE_NAME = ?
+      ORDER BY ORDINAL_POSITION
+    `, [dbName, tableName]);
     columns = result[0].map(col => ({
-      name: col.Field,
-      type: col.Type,
-      nullable: col.Null === 'YES',
-      default_value: col.Default
+      name: col.name,
+      type: col.type,
+      nullable: col.nullable === 'YES',
+      default_value: col.default_value,
+      collation: col.collation,
+      charset: col.charset
     }));
   }
 

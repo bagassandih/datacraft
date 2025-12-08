@@ -267,7 +267,13 @@ export function buildQuery(nodes, edges, clauses = {}) {
           .replace(new RegExp(`\\b${targetTableName}\\b`, 'g'), targetAlias);
       } else if (edge.data?.sourceColumn && edge.data?.targetColumn) {
         // 2. Use specific columns from edge data (column-level join)
-        joinCondition = `${sourceAlias}.${edge.data.sourceColumn} = ${targetAlias}.${edge.data.targetColumn}`;
+        // Check if COLLATE is needed for collation mismatch
+        if (edge.data?.useCollate && edge.data?.collateValue) {
+          // Apply COLLATE to both sides of the join condition
+          joinCondition = `${sourceAlias}.${edge.data.sourceColumn} COLLATE ${edge.data.collateValue} = ${targetAlias}.${edge.data.targetColumn} COLLATE ${edge.data.collateValue}`;
+        } else {
+          joinCondition = `${sourceAlias}.${edge.data.sourceColumn} = ${targetAlias}.${edge.data.targetColumn}`;
+        }
       } else if (edge.condition) {
         // 3. Use condition from edge
         joinCondition = edge.condition

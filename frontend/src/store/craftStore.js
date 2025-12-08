@@ -22,13 +22,30 @@ export const useCraftStore = defineStore('craft', () => {
   const loading = ref(false)
   const error = ref(null)
 
-  // Watch for changes and save to session storage
-  watch(
-    [dbConnection, schema, nodes, edges, queryClauses],
-    () => {
+  // Debounced session save to avoid blocking during drag
+  let saveTimer = null
+  const debouncedSaveSession = () => {
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => {
       saveSession()
+    }, 500) // Save 500ms after last change
+  }
+
+  // Watch for changes and save to session storage (debounced)
+  watch(
+    [dbConnection, schema, edges, queryClauses],
+    () => {
+      debouncedSaveSession()
     },
     { deep: true }
+  )
+
+  // Separate watcher for nodes - only watch length to avoid position change triggers
+  watch(
+    () => nodes.value.length,
+    () => {
+      debouncedSaveSession()
+    }
   )
 
   // Getters
@@ -169,6 +186,8 @@ export const useCraftStore = defineStore('craft', () => {
   function setNodes(newNodes) {
     nodes.value = newNodes
     updateAliases()
+    // Trigger debounced save for position updates
+    debouncedSaveSession()
   }
 
   function addEdge(edge) {

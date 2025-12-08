@@ -37,10 +37,11 @@
         <TableNode :data="data" :id="id" />
       </template>
 
-      <!-- Custom Edge Labels -->
-      <template v-for="edge in styledEdges" :key="'label-' + edge.id">
-        <EdgeLabelRenderer v-if="edge.label">
+      <!-- Custom Edge Labels - rendered separately to avoid re-render on drag -->
+      <EdgeLabelRenderer>
+        <template v-for="edge in styledEdges" :key="'label-' + edge.id">
           <div
+            v-if="edge.label"
             :style="getEdgeLabelStyle(edge)"
             class="edge-label-container nodrag nopan"
           >
@@ -53,8 +54,8 @@
               <span class="join-type">{{ edge.data?.joinType || 'INNER' }}</span>
             </div>
           </div>
-        </EdgeLabelRenderer>
-      </template>
+        </template>
+      </EdgeLabelRenderer>
     </VueFlow>
 
     <!-- Modal untuk edit join type -->
@@ -133,7 +134,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, shallowRef } from 'vue'
 import { VueFlow, useVueFlow, EdgeLabelRenderer } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
@@ -147,23 +148,17 @@ const message = useMessage()
 const craftStore = useCraftStore()
 const { project, getViewport, setViewport, getEdges } = useVueFlow()
 
-// Get edge label position style from VueFlow's internal edge data
+// Get edge label position style - read directly from VueFlow edges
 const getEdgeLabelStyle = (edge) => {
-  // Get VueFlow's internal edges which have computed positions
-  const vfEdges = getEdges.value
-  const vfEdge = vfEdges.find(e => e.id === edge.id)
+  // Find the edge in VueFlow's internal state which has computed positions
+  const vfEdge = getEdges.value.find(e => e.id === edge.id)
 
-  if (!vfEdge) return { display: 'none' }
+  if (!vfEdge || vfEdge.sourceX === undefined) {
+    return { display: 'none' }
+  }
 
-  // VueFlow stores label position in the edge when rendered
-  // Use sourceX/Y and targetX/Y to calculate middle position
-  const sourceX = vfEdge.sourceX ?? 0
-  const sourceY = vfEdge.sourceY ?? 0
-  const targetX = vfEdge.targetX ?? 0
-  const targetY = vfEdge.targetY ?? 0
-
-  const labelX = sourceX + (targetX - sourceX) / 2
-  const labelY = sourceY + (targetY - sourceY) / 2
+  const labelX = vfEdge.sourceX + (vfEdge.targetX - vfEdge.sourceX) / 2
+  const labelY = vfEdge.sourceY + (vfEdge.targetY - vfEdge.sourceY) / 2
 
   return {
     position: 'absolute',
@@ -282,18 +277,18 @@ const joinTypes = [
 // Reactive map to store mismatch results by edge id
 const mismatchMap = ref({})
 
-// Update mismatch map whenever edges or nodes change
-watch(
-  [edges, nodes],
-  () => {
-    const results = {}
-    edges.value.forEach(edge => {
-      results[edge.id] = hasCollationMismatch(edge)
-    })
-    mismatchMap.value = results
-  },
-  { deep: true, immediate: true }
-)
+// Update mismatch map when edges change
+const updateMismatchMap = () => {
+  const results = {}
+  edges.value.forEach(edge => {
+    results[edge.id] = hasCollationMismatch(edge)
+  })
+  mismatchMap.value = results
+}
+
+// Watch edges length and data changes for mismatch updates
+watch(() => edges.value.length, updateMismatchMap, { immediate: true })
+watch(() => edges.value.map(e => `${e.id}:${e.data?.useCollate}`).join('|'), updateMismatchMap)
 
 // Helper for template to check mismatch by edge id
 const hasMismatch = (edgeId) => {
@@ -322,15 +317,22 @@ const styledEdges = computed(() => {
 // Sync with store
 watch(() => craftStore.nodes, (newNodes) => {
   nodes.value = newNodes
-}, { deep: true })
+}, { immediate: true })
 
 watch(() => craftStore.edges, (newEdges) => {
   edges.value = newEdges
-}, { deep: true })
+  updateMismatchMap()
+}, { immediate: true })
+
+// Debounce timer for node changes
+let nodesChangeTimer = null
 
 const onNodesChange = (changes) => {
-  // Handle node changes
-  craftStore.setNodes(nodes.value)
+  // Debounce store sync to avoid excessive updates during drag
+  if (nodesChangeTimer) clearTimeout(nodesChangeTimer)
+  nodesChangeTimer = setTimeout(() => {
+    craftStore.setNodes(nodes.value)
+  }, 100)
 }
 
 const onEdgesChange = (changes) => {
@@ -475,9 +477,15 @@ const deleteEdge = (edgeId) => {
   message.success('Connection deleted')
 }
 
-// Track viewport changes (pan/zoom)
+// Debounce timer for viewport changes
+let viewportChangeTimer = null
+
+// Track viewport changes (pan/zoom) - debounced
 const onViewportChange = (viewport) => {
-  craftStore.setViewport(viewport)
+  if (viewportChangeTimer) clearTimeout(viewportChangeTimer)
+  viewportChangeTimer = setTimeout(() => {
+    craftStore.setViewport(viewport)
+  }, 150)
 }
 
 // Watch for pending viewport restore (from import)
@@ -682,6 +690,8 @@ watch(() => craftStore.pendingViewportRestore, (newViewport) => {
   display: flex;
   align-items: center;
   gap: 6px;
+  will-change: transform;
+  contain: layout style;
 }
 
 .vue-flow .edge-label {

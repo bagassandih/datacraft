@@ -87,6 +87,21 @@
     </div>
 
       <div class="sidebar-footer">
+        <div class="craft-actions">
+          <n-button size="small" @click="handleExport" :disabled="!craftStore.hasNodes">
+            Export
+          </n-button>
+          <n-button size="small" @click="triggerImport">
+            Import
+          </n-button>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".json"
+            style="display: none"
+            @change="handleImport"
+          />
+        </div>
         <n-button block @click="handleDisconnect">
           Disconnect
         </n-button>
@@ -115,6 +130,7 @@ const isCollapsed = ref(false)
 const searchQuery = ref('')
 const expandedTables = ref(new Set())
 const searchInputRef = ref(null)
+const fileInputRef = ref(null)
 
 // Filter tables based on search query
 const filteredTables = computed(() => {
@@ -200,6 +216,41 @@ const handleDisconnect = () => {
   craftStore.clearConnection()
   router.push('/')
   message.info('Disconnected from database')
+}
+
+// Export craft to JSON file
+const handleExport = () => {
+  craftStore.exportCraft()
+  message.success('Craft exported successfully')
+}
+
+// Trigger file input for import
+const triggerImport = () => {
+  fileInputRef.value?.click()
+}
+
+// Handle file import
+const handleImport = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  try {
+    const text = await file.text()
+    const craftData = JSON.parse(text)
+
+    const result = craftStore.importCraft(craftData)
+
+    if (result.success) {
+      message.success('Craft imported successfully')
+    } else {
+      message.error(result.error || 'Failed to import craft')
+    }
+  } catch (error) {
+    message.error('Invalid JSON file')
+  }
+
+  // Reset input so same file can be selected again
+  event.target.value = ''
 }
 </script>
 
@@ -434,5 +485,15 @@ const handleDisconnect = () => {
 .sidebar-footer {
   padding: 15px;
   border-top: 1px solid #2d3548;
+}
+
+.craft-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.craft-actions .n-button {
+  flex: 1;
 }
 </style>

@@ -56,7 +56,12 @@
             <span class="collapse-icon">
               {{ expandedTables.has(table.name) ? '▼' : '▶' }}
             </span>
-            <span class="table-item-name">{{ table.name }}</span>
+            <n-tooltip trigger="hover" :delay="300">
+              <template #trigger>
+                <span class="table-item-name">{{ table.name }}</span>
+              </template>
+              {{ table.name }}
+            </n-tooltip>
             <n-button
               size="tiny"
               type="primary"

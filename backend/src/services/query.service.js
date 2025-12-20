@@ -72,6 +72,38 @@ export class QueryService {
       throw new Error(`Query execution failed: ${error.message}`);
     }
   }
+
+  /**
+   * Execute DDL statement (CREATE TABLE, ALTER TABLE, etc.)
+   * @param {string} statement - DDL statement to execute
+   * @returns {Promise<Object>} Execution result
+   */
+  async executeDDL(statement) {
+    const db = getConnection();
+    if (!db) {
+      throw new Error('No database connection. Please connect first.');
+    }
+
+    // Validate that statement is a DDL statement
+    const trimmed = statement.trim().toUpperCase();
+    const allowedCommands = ['CREATE TABLE', 'ALTER TABLE', 'DROP TABLE', 'CREATE INDEX', 'DROP INDEX', 'RENAME TABLE'];
+    const isAllowed = allowedCommands.some(cmd => trimmed.startsWith(cmd));
+
+    if (!isAllowed) {
+      throw new Error('Only DDL statements (CREATE TABLE, ALTER TABLE, etc.) are allowed');
+    }
+
+    try {
+      await db.raw(statement);
+
+      return {
+        success: true,
+        message: 'Statement executed successfully'
+      };
+    } catch (error) {
+      throw new Error(`DDL execution failed: ${error.message}`);
+    }
+  }
 }
 
 export default new QueryService();

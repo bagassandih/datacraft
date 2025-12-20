@@ -59,6 +59,32 @@ export class QueryController {
       });
     }
   }
+
+  /**
+   * Execute DDL statement (CREATE TABLE, ALTER TABLE, etc.)
+   * POST /api/execute-ddl
+   */
+  async executeDDL(req, res) {
+    try {
+      const { statement } = req.body;
+
+      if (!statement) {
+        return res.status(400).json({
+          success: false,
+          message: 'Statement is required'
+        });
+      }
+
+      const result = await queryService.executeDDL(statement);
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }
 
 export default new QueryController();

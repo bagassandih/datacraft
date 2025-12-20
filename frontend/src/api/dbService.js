@@ -49,6 +49,14 @@ export const dbService = {
   },
 
   /**
+   * Disconnect from database
+   * @returns {Promise}
+   */
+  async disconnect() {
+    return api.post('/disconnect')
+  },
+
+  /**
    * Get database schema
    * @returns {Promise}
    */
@@ -72,6 +80,15 @@ export const dbService = {
    */
   async executeQuery(query) {
     return api.post('/execute', { query })
+  },
+
+  /**
+   * Execute DDL statement (CREATE TABLE, ALTER TABLE, etc.)
+   * @param {string} statement - DDL statement
+   * @returns {Promise}
+   */
+  async executeDDL(statement) {
+    return api.post('/execute-ddl', { statement })
   }
 }
 

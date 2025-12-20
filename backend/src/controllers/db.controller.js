@@ -59,6 +59,23 @@ export class DbController {
       });
     }
   }
+
+  /**
+   * Disconnect from database
+   * POST /api/disconnect
+   */
+  async disconnect(req, res) {
+    try {
+      const result = await dbService.disconnect();
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }
 
 export default new DbController();

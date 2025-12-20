@@ -5,7 +5,7 @@
       <div class="app-logo">
         <div class="logo-content">
           <h1>🛠️ DataCraft</h1>
-          <p class="app-subtitle">Visual SQL Query Builder</p>
+          <p class="app-subtitle">Crafting Query</p>
         </div>
         <!-- Toggle Button in Logo -->
         <button class="collapse-btn" @click="isCollapsed = true" title="Collapse Sidebar">
@@ -217,10 +217,15 @@ const refreshSchema = async () => {
   }
 }
 
-const handleDisconnect = () => {
-  craftStore.clearConnection()
-  router.push('/')
-  message.info('Disconnected from database')
+const handleDisconnect = async () => {
+  try {
+    await dbService.disconnect()
+    craftStore.clearConnection()
+    message.success('Disconnected from database')
+    router.push('/')
+  } catch (error) {
+    message.error(error.message || 'Failed to disconnect')
+  }
 }
 
 // Export craft to JSON file

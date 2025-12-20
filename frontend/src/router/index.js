@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import CraftView from '../views/CraftView.vue'
+import ERDView from '../views/ERDView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,11 +15,19 @@ const router = createRouter({
       }
     },
     {
-      path: '/craft',
-      name: 'craft',
+      path: '/query',
+      name: 'query',
       component: CraftView,
       meta: {
-        title: 'DataCraft - Visual Query Builder'
+        title: 'DataCraft - Crafting Query'
+      }
+    },
+    {
+      path: '/erd',
+      name: 'erd',
+      component: ERDView,
+      meta: {
+        title: 'DataCraft - Crafting ERD'
       }
     }
   ]

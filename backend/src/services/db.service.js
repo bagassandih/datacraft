@@ -1,4 +1,4 @@
-import { testConnection, initializeConnection } from '../config/knex.js';
+import { testConnection, initializeConnection, closeConnection } from '../config/knex.js';
 import { getCompleteSchema } from '../utils/schema-reader.js';
 import { validateConnectionConfig } from '../utils/validator.js';
 import { listDatabases } from '../utils/database-lister.js';
@@ -82,6 +82,22 @@ export class DbService {
       return schema;
     } catch (error) {
       throw new Error(`Failed to retrieve schema: ${error.message}`);
+    }
+  }
+
+  /**
+   * Disconnect from database
+   * @returns {Promise<Object>} Disconnect result
+   */
+  async disconnect() {
+    try {
+      await closeConnection();
+      return {
+        success: true,
+        message: 'Disconnected successfully'
+      };
+    } catch (error) {
+      throw new Error(`Failed to disconnect: ${error.message}`);
     }
   }
 }

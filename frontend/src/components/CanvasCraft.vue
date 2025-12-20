@@ -379,7 +379,7 @@ const onConnect = (params) => {
     target: params.target,
     sourceHandle: params.sourceHandle,
     targetHandle: params.targetHandle,
-    type: 'default',
+    type: 'smoothstep',
     animated: true,
     label: 'INNER',
     data: {
@@ -704,9 +704,14 @@ watch(() => craftStore.pendingViewportRestore, (newViewport) => {
   cursor: pointer;
   transition: all 0.2s;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  background: rgba(99, 226, 183, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(99, 226, 183, 0.5);
 }
 
 .vue-flow .edge-label:hover {
+  background: rgba(99, 226, 183, 0.4);
   transform: scale(1.1);
 }
 
@@ -717,6 +722,7 @@ watch(() => craftStore.pendingViewportRestore, (newViewport) => {
 
 .vue-flow .join-type {
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: #63e2b7;
 }
 </style>

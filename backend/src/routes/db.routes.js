@@ -9,6 +9,9 @@ router.post('/databases', (req, res) => dbController.listDatabases(req, res));
 // POST /api/connect - Test and establish database connection
 router.post('/connect', (req, res) => dbController.connect(req, res));
 
+// POST /api/disconnect - Disconnect from database
+router.post('/disconnect', (req, res) => dbController.disconnect(req, res));
+
 // GET /api/schema - Get database schema
 router.get('/schema', (req, res) => dbController.getSchema(req, res));
 
